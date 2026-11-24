@@ -1,6 +1,8 @@
 # SAE 51 P1 – Réseau 5G SA privé distribué et reconstructible
 
+
 ## Membres
+
 
 - Lounes
 - Ethan
@@ -9,6 +11,7 @@
 - Chaima
 
 ## Répartition des rôles
+
 
 | Lot     | Responsabilité                                         |
 | ------- | ------------------------------------------------------ |
@@ -19,6 +22,7 @@
 | Chaima  | Phénomène lié à la distribution, métrologie et analyse |
 
 ## Présentation et contraintes du projet
+
 
 Ce projet à pour but de réaliser une architecture 5G distribuée avec déploiement et recette automatisés. Il sera entièrement logiciel car toute émission d'onde radio est interdite.
 Pour la présentation complète avec les objectifs les invariants et les jalons voir le [cahier des charges](P1_cahier_des_charges.pdf).
