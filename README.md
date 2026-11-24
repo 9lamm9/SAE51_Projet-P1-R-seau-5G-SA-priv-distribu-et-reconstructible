@@ -29,4 +29,4 @@ Pour la présentation complète avec les objectifs les invariants et les jalons 
 
 ---
 
-*a compléter plus tard avec des explications de l'infra*
+*à compléter plus tard avec des explications de l'infra*
