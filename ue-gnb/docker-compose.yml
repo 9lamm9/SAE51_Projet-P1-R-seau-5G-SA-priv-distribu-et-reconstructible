@@ -1,0 +1,21 @@
+services:
+  # L'antenne relais
+  gnb:
+    image: gradiant/ueransim:3.2.6
+    container_name: ueransim-gnb
+    network_mode: host
+    command: ["nr-gnb", "-c", "/etc/ueransim/gnb.yaml"]
+    volumes:
+      - ./config:/etc/ueransim
+
+  # Le téléphone 5G
+  ue:
+    image: gradiant/ueransim:3.2.6
+    container_name: ueransim-ue
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    command: ["nr-ue", "-c", "/etc/ueransim/ue.yaml"]
+    volumes:
