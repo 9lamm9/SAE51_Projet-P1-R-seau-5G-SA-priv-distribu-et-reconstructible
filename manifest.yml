@@ -1,5 +1,5 @@
 versions:
-  os_cible: "ubuntu-22.04"
+  os_cible: "debian-12.15"
   docker:
     open5gs: "gradiant/open5gs:2.7.7"
     ueransim: "gradiant/ueransim:3.2.6"
