@@ -1,0 +1,116 @@
+# /opt/5g-core/docker-compose.yml
+services:
+  # Base de données
+  mongodb:
+    image: mongo:6.0.15
+    container_name: open5gs-mongo
+    network_mode: host
+    volumes:
+      - mongo_data:/data/db
+
+# Interface d'administration Web (WebUI)
+  webui:
+    image: gradiant/open5gs-webui:2.7.7
+    container_name: open5gs-webui
+    network_mode: host
+    environment:
+      - DB_URI=mongodb://127.0.0.1:27017/open5gs
+
+  # Fonctions de gestion SBA et routage interne
+  nrf:
+    image: gradiant/open5gs:2.7.7
+    container_name: open5gs-nrf
+    network_mode: host
+    command: ["open5gs-nrfd", "-c", "/etc/open5gs/nrf.yaml"]
+    volumes:
+      - ./config:/etc/open5gs
+
+  scp:
+    image: gradiant/open5gs:2.7.7
+    container_name: open5gs-scp
+    network_mode: host
+    command: ["open5gs-scpd", "-c", "/etc/open5gs/scp.yaml"]
+    volumes:
+      - ./config:/etc/open5gs
+
+  # Fonctions d'abonnement et de sécurité
+  udr:
+    image: gradiant/open5gs:2.7.7
+    container_name: open5gs-udr
+    network_mode: host
+    command: ["open5gs-udrd", "-c", "/etc/open5gs/udr.yaml"]
+    volumes:
+      - ./config:/etc/open5gs
+
+  udm:
+    image: gradiant/open5gs:2.7.7
+    container_name: open5gs-udm
+    network_mode: host
+    command: ["open5gs-udmd", "-c", "/etc/open5gs/udm.yaml"]
+    volumes:
+      - ./config:/etc/open5gs
+
+  ausf:
+    image: gradiant/open5gs:2.7.7
+    container_name: open5gs-ausf
+    network_mode: host
+    command: ["open5gs-ausfd", "-c", "/etc/open5gs/ausf.yaml"]
+    volumes:
+      - ./config:/etc/open5gs
+
+  pcf:
+    image: gradiant/open5gs:2.7.7
+    container_name: open5gs-pcf
+    network_mode: host
+    command: ["open5gs-pcfd", "-c", "/etc/open5gs/pcf.yaml"]
+    volumes:
+      - ./config:/etc/open5gs
+
+  bsf:
+    image: gradiant/open5gs:2.7.7
+    container_name: open5gs-bsf
+    network_mode: host
+    command: ["open5gs-bsfd", "-c", "/etc/open5gs/bsf.yaml"]
+    volumes:
+      - ./config:/etc/open5gs
+
+  nssf:
+    image: gradiant/open5gs:2.7.7
+    container_name: open5gs-nssf
+    network_mode: host
+    command: ["open5gs-nssfd", "-c", "/etc/open5gs/nssf.yaml"]
+    volumes:
+      - ./config:/etc/open5gs
+
+  # Plan de contrôle d'accès (AMF) et gestion de session (SMF)
+  amf:
+    image: gradiant/open5gs:2.7.7
+    container_name: open5gs-amf
+    network_mode: host
+    command: ["open5gs-amfd", "-c", "/etc/open5gs/amf.yaml"]
+    volumes:
+      - ./config:/etc/open5gs
+
+  smf:
+    image: gradiant/open5gs:2.7.7
+    container_name: open5gs-smf
+    network_mode: host
+    command: ["open5gs-smfd", "-c", "/etc/open5gs/smf.yaml"]
+    volumes:
+      - ./config:/etc/open5gs
+
+  # Plan utilisateur (UPF) - Nécessite les droits réseau pour créer le tunnel ogstun
+  upf:
+    image: gradiant/open5gs:2.7.7
+    container_name: open5gs-upf
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    command: ["open5gs-upfd", "-c", "/etc/open5gs/upf.yaml"]
+    volumes:
+      - ./config:/etc/open5gs
+
+volumes:
+  mongo_data:
