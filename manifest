@@ -1,0 +1,13 @@
+versions:
+  os_cible: "ubuntu-22.04"
+  docker:
+    open5gs: "gradiant/open5gs:2.7.7"
+    ueransim: "gradiant/ueransim:3.2.6"
+    mongodb: "mongo:6.0.15"
+    nginx: "nginx:1.27.3-alpine"
+    iperf3: "networkstatic/iperf3:latest"
+  system_packages:
+    - docker-ce
+    - docker-ce-cli
+    - containerd.io
+    - docker-compose-plugin
