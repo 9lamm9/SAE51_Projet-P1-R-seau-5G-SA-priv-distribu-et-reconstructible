@@ -1,0 +1,15 @@
+services:
+  # Serveur de test de débit et latence
+  iperf3:
+    image: networkstatic/iperf3:latest
+    container_name: dn-iperf3
+    network_mode: host
+    command: ["-s", "-B", "10.30.0.20", "-p", "5201"]
+
+  # Serveur Web
+  web:
+    image: nginx:1.27.3-alpine
+    container_name: dn-nginx
+    network_mode: host
+    volumes:
+      - ./html:/usr/share/nginx/html
