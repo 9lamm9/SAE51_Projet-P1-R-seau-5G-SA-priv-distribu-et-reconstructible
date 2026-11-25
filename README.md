@@ -44,3 +44,7 @@ Pool d'adresses UE : 10.45.0.0/16 (passerelle `ogstun` 10.45.0.1). Une fonction 
 - Plan d'adressage, flux et paramètres à faire concorder : [architecture/plan-adressage.md](architecture/plan-adressage.md)
 - Paramètres pour l'automatisation : [architecture/parametres.yml](architecture/parametres.yml)
 - Chemin d'un accès et d'un paquet, diagnostic par fonction : [architecture/chemin-et-diagnostic.md](architecture/chemin-et-diagnostic.md) et [architecture/diag/diag-chemin.sh](architecture/diag/diag-chemin.sh)
+
+### Déploiement (un script par VM)
+
+Monter les VM depuis zéro : voir [deploy/README.md](deploy/README.md). En résumé, sur chaque VM : `git clone` de ce dépôt puis `sudo bash deploy/srv-<nom>.sh` (ordre : srv-dest, srv-core, srv-ue). Depuis srv-ctrl, une seule commande reconstruit tout et lance la recette : `bash deploy/deploy-all.sh`.
