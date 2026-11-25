@@ -1,0 +1,123 @@
+# =============================================================================
+# SAE 5.01 P1 - Paramètres d'architecture et d'adressage (lot L1 - Lounes)
+# -----------------------------------------------------------------------------
+# Source unique de vérité pour l'adressage et les paramètres qui DOIVENT
+# concorder entre l'UE, le gNB et le cœur. Les automatisations des lots L2
+# (cœur) et L3 (gNB/UE/DN) doivent lire ces valeurs (ex. group_vars Ansible ou
+# fichier .env généré), jamais les recopier à la main.
+#
+# AUCUN SECRET ICI : la clé K et l'OPc des abonnés sont fournies au moment du
+# déploiement (variables d'environnement / ansible-vault), voir plan-adressage.md
+# =============================================================================
+
+hotes:
+  srv-ctrl:
+    role: "Contrôleur de déploiement et de recette (lance l'automatisation, la recette et les mesures)"
+    mgmt: 192.168.10.10
+  srv-ue:
+    role: "Périphérie atelier : gNB + UE simulés (UERANSIM)"
+    mgmt: 192.168.10.30
+    n2_n3: 10.20.0.20          # eth1 - VLAN 20
+  srv-core:
+    role: "Serveur central : cœur 5G Open5GS complet (plan de contrôle + UPF) + MongoDB"
+    mgmt: 192.168.10.20
+    n2_n3: 10.20.0.10          # eth1 - VLAN 20
+    n6: 10.30.0.10             # eth2 - VLAN 30
+  srv-dest:
+    role: "Réseau de données : serveur au-delà de l'UPF (nginx + iperf3)"
+    mgmt: 192.168.10.40
+    n6: 10.30.0.20             # eth1 - VLAN 30
+
+reseaux:
+  mgmt:
+    vlan: 10
+    prefixe: 192.168.10.0/24
+    usage: "Administration, SSH de l'automatisation, collecte des résultats. Aucun trafic 5G."
+  ran_core:
+    vlan: 20
+    prefixe: 10.20.0.0/24
+    usage: "N2 (NGAP/SCTP) et N3 (GTP-U/UDP) entre srv-ue et srv-core"
+  n6:
+    vlan: 30
+    prefixe: 10.30.0.0/24
+    usage: "N6 entre l'UPF (srv-core) et le réseau de données (srv-dest)"
+  pool_ue:
+    prefixe: 10.45.0.0/16
+    passerelle_upf: 10.45.0.1   # interface ogstun sur srv-core
+    usage: "Adresses attribuées aux UE par le SMF/UPF (DNN internet)"
+
+# Adresses SBI internes au cœur (boucle locale de srv-core, valeurs par défaut
+# d'Open5GS conservées : tous les NF sont en network_mode: host sur le même hôte)
+sbi:
+  port: 7777
+  nrf: 127.0.0.10
+  scp: 127.0.0.200
+  amf: 127.0.0.5
+  smf: 127.0.0.4
+  ausf: 127.0.0.11
+  udm: 127.0.0.12
+  pcf: 127.0.0.13
+  nssf: 127.0.0.14
+  bsf: 127.0.0.15
+  udr: 127.0.0.20
+
+interfaces_5g:
+  n2:
+    protocole: NGAP/SCTP
+    serveur: 10.20.0.10        # AMF (ngap.server)
+    port: 38412
+    client: 10.20.0.20         # gNB (ngapIp)
+  n3:
+    protocole: GTP-U/UDP
+    upf: 10.20.0.10            # UPF (gtpu.server)
+    gnb: 10.20.0.20            # gNB (gtpIp)
+    port: 2152
+  n4:
+    protocole: PFCP/UDP
+    smf: 127.0.0.4             # SMF (pfcp.server)
+    upf: 127.0.0.7             # UPF (pfcp.server) - N4 reste local à srv-core
+    port: 8805
+  n6:
+    upf: 10.30.0.10
+    dn: 10.30.0.20
+    mode: routage              # pas de NAT : le DN voit les vraies adresses UE
+  radio_simulee:
+    protocole: UDP (lien radio simulé UERANSIM)
+    gnb_link_ip: 127.0.0.1     # UE et gNB sur le même hôte
+    port: 4997
+
+# Paramètres radio/abonnement qui doivent être IDENTIQUES dans amf.yaml,
+# smf.yaml, nrf.yaml, gnb.yaml, ue.yaml et la base d'abonnés
+plmn:
+  mcc: "001"
+  mnc: "01"
+  tac: 1
+  slice:
+    sst: 1
+    sd: "000001"
+  dnn: internet
+  nr_cell_identity: "0x000000010"
+  gnb_id_length: 32
+
+abonnes:
+  # IMSI de test (PLMN 001/01). Les clés K/OPc NE SONT PAS dans le dépôt.
+  imsi_premier: "001010000000001"
+  nombre: 1
+  amf_field: "8000"
+  secrets_fournis_par: ["UE_K", "UE_OPC"]   # variables d'environnement au déploiement
+
+mtu:
+  lien_physique: 1500
+  surcout_gtpu_octets: 44     # IPv4 20 + UDP 8 + GTP-U 8 + en-tête d'extension PDU Session 8
+  tun_ue_recommande: 1400     # marge sous 1500 - 44 = 1456
+
+services_dn:
+  http: { adresse: 10.30.0.20, port: 80 }
+  iperf3: { adresse: 10.30.0.20, port: 5201 }
+
+conteneurs:
+  srv-core: [open5gs-mongo, open5gs-webui, open5gs-nrf, open5gs-scp, open5gs-udr,
+             open5gs-udm, open5gs-ausf, open5gs-pcf, open5gs-bsf, open5gs-nssf,
+             open5gs-amf, open5gs-smf, open5gs-upf]
+  srv-ue: [ueransim-gnb, ueransim-ue]
+  srv-dest: [dn-nginx, dn-iperf3]
