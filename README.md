@@ -29,4 +29,18 @@ Pour la présentation complète avec les objectifs les invariants et les jalons 
 
 ---
 
-*à compléter plus tard avec des explications de l'infra*
+### Architecture (lot L1)
+
+| Hôte | Rôle | Administration (VLAN 10) | Interfaces 5G |
+| ---- | ---- | ------------------------ | ------------- |
+| srv-ctrl | Automatisation, recette, mesures | 192.168.10.10 | — |
+| srv-core | Cœur Open5GS complet (AMF, SMF, UPF, NRF, SCP, AUSF, UDM, UDR, PCF, NSSF, BSF) + MongoDB | 192.168.10.20 | N2/N3 10.20.0.10 (VLAN 20), N6 10.30.0.10 (VLAN 30) |
+| srv-ue | gNB + UE UERANSIM | 192.168.10.30 | N2/N3 10.20.0.20 (VLAN 20) |
+| srv-dest | Réseau de données (nginx, iperf3) | 192.168.10.40 | N6 10.30.0.20 (VLAN 30) |
+
+Pool d'adresses UE : 10.45.0.0/16 (passerelle `ogstun` 10.45.0.1). Une fonction réseau = un conteneur, pour pouvoir localiser la fonction en panne.
+
+- Architecture, alternatives comparées et justification : [architecture/architecture.md](architecture/architecture.md)
+- Plan d'adressage, flux et paramètres à faire concorder : [architecture/plan-adressage.md](architecture/plan-adressage.md)
+- Paramètres pour l'automatisation : [architecture/parametres.yml](architecture/parametres.yml)
+- Chemin d'un accès et d'un paquet, diagnostic par fonction : [architecture/chemin-et-diagnostic.md](architecture/chemin-et-diagnostic.md) et [architecture/diag/diag-chemin.sh](architecture/diag/diag-chemin.sh)
