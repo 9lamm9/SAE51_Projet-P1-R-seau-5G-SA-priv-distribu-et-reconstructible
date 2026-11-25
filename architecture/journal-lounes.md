@@ -50,3 +50,36 @@
 - [ ] Faire valider par l'équipe les critères et poids de la comparaison, et l'intégrer à la note de faisabilité J1.
 - [ ] Relever une capture N2/N3 de référence (numéros de trame) pour les « trois preuves clés » du J2.
 - [ ] Rédiger la partie « Architecture et justification » du rapport à partir de ces fichiers.
+
+---
+
+## 2026-11-25 (après-midi) – Scripts de déploiement, un par VM (dossier `deploy/`)
+
+Les autres lots n'ayant pas commencé, la base du déploiement est faite à partir du plan L1, pour pouvoir monter les VM depuis zéro.
+
+### Ce qui a été fait
+1. **Étude des images du manifeste** (dépôt Gradiant/5g-images) :
+   - `gradiant/open5gs:2.7.7` tourne en utilisateur non root, et son script d'entrée crée `ogstun` avec du NAT et des `sysctl` (il échoue sans privilèges) ;
+   - `gradiant/ueransim` attend `gnb`/`ue` comme premier argument. Avec `command: ["nr-gnb", ...]` (le compose actuel de `ue-gnb/`), il ne lance rien de correct.
+   - Décision : les scripts **remplacent le point d'entrée** par le binaire de la fonction (`open5gs-amfd`, `nr-gnb`…). `ogstun` est créé par l'hôte (service `sae51-net`), et l'UPF tourne en root avec `NET_ADMIN` + `/dev/net/tun`.
+2. **`deploy/commun.sh`** : paramètres (repris de `parametres.yml`), choix automatique des cartes réseau (la carte Internet n'est jamais modifiée ; options `IF_*`, `VLAN_TRUNK`, `SINGLE_NIC`), réseau persistant via le service systemd `sae51-net`, sysctl, SCTP, installation de Docker, images avec **cache hors ligne** (`--save-cache`), secrets K/OPc hors Git, écriture « seulement si le contenu change », **compteur de changements** (E2) et historique `/var/log/sae51/executions.csv`.
+3. **`deploy/srv-core.sh`** : génère les 11 configurations Open5GS (format 2.7, adresses de `plan-adressage.md`) et le compose (un conteneur par fonction), provisionne l'abonné dans MongoDB (mise à jour seulement si besoin) et vérifie l'écoute N2/N3.
+4. **`deploy/srv-ue.sh`** : `gnb.yaml`, `ue.yaml` (mode 600, contient les clés) et le compose. Attend `uesimtun0`, règle le MTU à 1400 et teste un ping de bout en bout.
+5. **`deploy/srv-dest.sh`** : nginx + iperf3 et route retour `10.45.0.0/16 via 10.30.0.10`.
+6. **`deploy/srv-ctrl.sh`** et **`deploy/deploy-all.sh`** : reconstruction complète en **une commande** depuis srv-ctrl (copie par SSH, ordre DN → cœur → accès), puis recette `diag-chemin.sh`. Les mesures sont ajoutées à `resultats/reconstructions.csv` (E1/E2).
+7. **Docker configuré avec `"iptables": false`** : sinon Docker passe la chaîne FORWARD en DROP, et l'UE s'attache sans que les paquets traversent l'UPF. C'est un risque identifié pendant l'écriture.
+8. **`deploy/README.md`** : guide de création des 4 VM (cartes réseau pour VirtualBox, VMware et Proxmox), ordre de lancement, mode hors ligne.
+
+### Tests réalisés (hors VM, commandes système simulées)
+- Syntaxe bash de tous les scripts, YAML des 11 configurations Open5GS, de `gnb.yaml`/`ue.yaml` et des 3 compose validés (`docker compose config`).
+- Idempotence : un second passage de srv-dest, srv-ue et srv-ctrl donne **0 changement**. Pour srv-core, il reste 1 changement, qui vient de l'environnement de test (pas de module SCTP).
+- Le script JavaScript de provisionnement de l'abonné a été exécuté sur une base simulée : création au 1er passage, « déjà provisionné » au 2e.
+- Choix des cartes testé pour 4, 3, 2 et 1 carte(s) et en mode trunk 802.1Q.
+- `deploy-all.sh` testé avec un SSH simulé : copie du code et des secrets, appel des scripts, ligne CSV.
+- **Non testé : le démarrage réel des conteneurs.** Les images Docker n'étaient pas téléchargeables depuis l'environnement de travail ; c'est à valider sur les VM.
+
+### Reste à faire
+- [ ] Créer les 4 VM (voir `deploy/README.md`) et lancer les scripts. Noter les erreurs éventuelles ici.
+- [ ] Reporter le digest d'iperf3 (`/var/log/sae51/versions.txt`) dans `manifest.yml`.
+- [ ] Prévoir le cache des paquets Docker (`.deb`) pour l'état initial de la soutenance.
+- [ ] Prévenir Alexis (L2), Ethan (L3) et Mohamed (L4) : `deploy/` remplace les compose de `core/`, `ue-gnb/` et `dn/`, qui sont incomplets ; ils peuvent reprendre et améliorer ces scripts.
