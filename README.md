@@ -15,11 +15,11 @@
 
 | Lot     | Responsabilité                                         |
 | ------- | ------------------------------------------------------ |
-| Lounes  | Architecture, adressage et justification des choix     |
-| Alexis  | Automatisation du déploiement du cœur                  |
-| Ethan   | Automatisation du gNB, des UE et du réseau de données  |
-| Mohamed | Recette automatisée et tests                           |
-| Chaima  | Phénomène lié à la distribution, métrologie et analyse |
+| L1 Lounes  | Architecture, adressage et justification des choix     |
+| L2 Alexis  | Automatisation du déploiement du cœur                  |
+| L3 Ethan   | Automatisation du gNB, des UE et du réseau de données  |
+| L4 Mohamed | Recette automatisée et tests                           |
+| L5 Chaima  | Phénomène lié à la distribution, métrologie et analyse |
 
 ### Présentation et contraintes du projet
 
